@@ -1,2 +1,2 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Large photo files — use Git LFS on GitHub (required for ~700MB of images)
+*.webp filter=lfs diff=lfs merge=lfs -text

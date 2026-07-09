@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>Private Photo Collection</title>
+<meta name="description" content="A private, luxury digital photo album." />
+<!-- Optional: set for GitHub Pages project site, e.g. content="/my-repo/" -->
+<meta name="site-base" content="" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cormorant:wght@300;400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ AMBIENT CANVAS (dust / light) ============ -->
+<canvas id="dust-canvas"></canvas>
+
+<!-- ============ LOADING SCREEN ============ -->
+<section id="loading-screen" class="screen" aria-label="Loading">
+  <div class="loading-vignette"></div>
+  <div class="loading-content">
+    <div class="loading-book">
+      <div class="loading-book__shadow"></div>
+      <div class="loading-book__cover loading-book__cover--back"></div>
+      <div class="loading-book__pages"></div>
+      <div class="loading-book__cover loading-book__cover--front">
+        <div class="loading-book__emblem">
+          <svg viewBox="0 0 60 60" width="34" height="34">
+            <circle cx="30" cy="30" r="27" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M30 12 L34 26 L48 26 L37 35 L41 49 L30 40 L19 49 L23 35 L12 26 L26 26 Z" fill="currentColor" opacity="0.85"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <p class="loading-text">Loading Memories<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
+    <div class="loading-bar"><div class="loading-bar__fill" id="loading-fill"></div></div>
+  </div>
+</section>
+
+<!-- ============ PASSWORD SCREEN ============ -->
+<section id="password-screen" class="screen" aria-label="Private collection password gate">
+  <div class="password-scene" id="password-scene">
+    <div class="library-backdrop"></div>
+    <div class="shelf-silhouette" aria-hidden="true">
+      <div class="shelf-band" style="top:4%"></div>
+      <div class="shelf-band" style="top:36%"></div>
+      <div class="shelf-band" style="top:68%"></div>
+    </div>
+    <div class="library-window" aria-hidden="true">
+      <div class="library-window__glow library-parallax" data-depth="0.35"></div>
+      <div class="library-window__frame library-parallax" data-depth="0.25"></div>
+    </div>
+    <div class="sun-beam sun-beam--warm" aria-hidden="true"></div>
+    <div class="sun-beam sun-beam--soft" aria-hidden="true"></div>
+    <div class="library-floor" aria-hidden="true"></div>
+    <div class="light-ray light-ray--1"></div>
+    <div class="light-ray light-ray--2"></div>
+    <div class="scene-vignette"></div>
+    <div class="library-backdrop__blur" id="scene-blur-layer"></div>
+  </div>
+
+  <div class="password-card" id="password-card">
+    <div class="frame-wrap">
+      <div class="photo-frame">
+        <div class="photo-frame__inner">
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <rect width="100" height="100" fill="#3a2a1d"/>
+            <circle cx="50" cy="38" r="16" fill="#5c4630"/>
+            <path d="M20 85 Q50 55 80 85 Z" fill="#5c4630"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <h1 class="password-title">Private Photo Collection</h1>
+    <p class="password-subtitle">This collection belongs to <em id="owner-name">Our Family</em>.</p>
+
+    <form id="password-form" class="password-form" autocomplete="off">
+      <div class="password-input-wrap">
+        <input
+          type="password"
+          id="password-input"
+          class="password-input"
+          placeholder="Enter Password"
+          aria-label="Enter password"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="submit" class="password-submit" aria-label="Unlock collection">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <p class="password-error" id="password-error">Incorrect password</p>
+    </form>
+  </div>
+
+  <!-- Unlock cinematic sequence -->
+  <div class="unlock-sequence" id="unlock-sequence">
+    <div class="unlock-bloom" id="unlock-bloom"></div>
+    <div class="unlock-mechanism" id="unlock-mechanism">
+      <svg class="unlock-svg" viewBox="-40 -20 300 280" width="195" height="182">
+        <defs>
+          <linearGradient id="lockMetal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f6e0ac"/>
+            <stop offset="55%" stop-color="#c9a15f"/>
+            <stop offset="100%" stop-color="#8a6a3d"/>
+          </linearGradient>
+          <radialGradient id="keyholePlate" cx="35%" cy="32%" r="75%">
+            <stop offset="0" stop-color="#3d2c19"/>
+            <stop offset="100%" stop-color="#150c05"/>
+          </radialGradient>
+        </defs>
+
+        <!-- shackle (its base sits inside the body outline, not exactly on
+             the edge, so the body rect painted afterward always masks the
+             seam cleanly no matter the rotation angle when it springs open) -->
+        <path id="lock-shackle" d="M65 97 V60 a45 45 0 0 1 90 0 V97" fill="none" stroke="url(#lockMetal)" stroke-width="13" stroke-linecap="round"/>
+
+        <!-- body -->
+        <rect x="40" y="85" width="140" height="110" rx="14" fill="url(#lockMetal)"/>
+        <rect x="40" y="85" width="140" height="110" rx="14" fill="none" stroke="rgba(30,18,8,0.35)" stroke-width="1.5"/>
+        <circle cx="55" cy="100" r="3.2" fill="rgba(40,25,10,0.45)"/>
+        <circle cx="165" cy="100" r="3.2" fill="rgba(40,25,10,0.45)"/>
+        <circle cx="55" cy="180" r="3.2" fill="rgba(40,25,10,0.45)"/>
+        <circle cx="165" cy="180" r="3.2" fill="rgba(40,25,10,0.45)"/>
+        <!-- decorative hinge cap: painted last so it always sits cleanly
+             on top of the shackle/body join, whatever angle the shackle is at -->
+        <circle cx="65" cy="93" r="7" fill="url(#lockMetal)" stroke="rgba(30,18,8,0.4)" stroke-width="1"/>
+
+        <!-- keyhole -->
+        <circle cx="110" cy="130" r="21" fill="url(#keyholePlate)"/>
+        <circle cx="110" cy="130" r="21" fill="none" stroke="rgba(246,224,172,0.25)" stroke-width="1"/>
+        <circle cx="110" cy="130" r="13" fill="#0b0602"/>
+        <rect x="106" y="136" width="8" height="21" rx="2" fill="#0b0602"/>
+
+        <!-- antique key, pivoting at its teeth (the insertion point = keyhole center) -->
+        <g transform="translate(110,130)">
+          <g class="key-group" id="unlock-key">
+            <circle cx="-62" cy="0" r="14" fill="none" stroke="#f6e0ac" stroke-width="5"/>
+            <circle cx="-62" cy="0" r="5" fill="none" stroke="#f6e0ac" stroke-width="3"/>
+            <rect x="-48" y="-2.5" width="34" height="5" rx="1.5" fill="#f6e0ac"/>
+            <path d="M-14 -2.5 h6 v-6 h5 v6 h4 v5 h-4 v6 h-5 v-6 h-6 z" fill="#f6e0ac"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOME / BOOKSHELF SCREEN ============ -->
+<section id="shelf-screen" class="screen" aria-label="Bookshelf">
+  <div class="library-scene" id="library-scene">
+    <div class="library-scene__wall library-parallax" data-depth="0.08"></div>
+    <div class="shelf-silhouette shelf-silhouette--deep library-parallax" data-depth="0.18" aria-hidden="true">
+      <div class="shelf-band" style="top:2%"></div>
+      <div class="shelf-band" style="top:34%"></div>
+      <div class="shelf-band" style="top:66%"></div>
+    </div>
+    <div class="library-scene__window library-parallax" data-depth="0.32">
+      <div class="window-glow"></div>
+    </div>
+    <div class="sun-beam sun-beam--warm" aria-hidden="true"></div>
+    <div class="sun-beam sun-beam--soft" aria-hidden="true"></div>
+    <div class="scene-vignette"></div>
+
+    <header class="shelf-header">
+      <p class="shelf-eyebrow">Private Collection</p>
+      <h1 class="shelf-title">The Memory Shelf</h1>
+      <p class="shelf-caption" id="shelf-caption">A lifetime kept close.</p>
+    </header>
+
+    <div class="bookshelf" id="bookshelf">
+      <div class="shelf-plank shelf-plank--top"></div>
+      <div class="books-row" id="books-row">
+        <!-- books injected by JS -->
+      </div>
+      <div class="shelf-plank shelf-plank--bottom"></div>
+    </div>
+
+    <div class="shelf-floor-glow"></div>
+  </div>
+</section>
+
+<!-- ============ BOOK / ALBUM SCREEN ============ -->
+<section id="book-screen" class="screen" aria-label="Open album">
+  <div class="book-scene" id="book-scene">
+    <button class="back-button" id="back-to-shelf" aria-label="Return to shelf">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Shelf</span>
+    </button>
+
+    <div class="book-stage" id="book-stage">
+      <div class="book-stage__shadow" id="book-shadow" aria-hidden="true"></div>
+      <button type="button" class="book-tap-zone book-tap-zone--prev" id="book-tap-prev" aria-label="Previous page"></button>
+      <button type="button" class="book-tap-zone book-tap-zone--next" id="book-tap-next" aria-label="Next page"></button>
+      <div class="book" id="book">
+        <div class="book__spine"></div>
+        <div class="book__back-cover" id="book-left-page">
+          <div class="book__left-ornament">
+            <svg viewBox="0 0 40 40" width="30" height="30">
+              <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="0.8"/>
+              <path d="M20 8 L22.5 17.5 L32 20 L22.5 22.5 L20 32 L17.5 22.5 L8 20 L17.5 17.5 Z" fill="currentColor" opacity="0.8"/>
+            </svg>
+          </div>
+          <p class="book__left-title" id="book-left-title"></p>
+          <p class="book__left-sub" id="book-left-sub"></p>
+          <div class="book__left-photo" id="book-left-photo"></div>
+          <div class="book__left-page-shadow"></div>
+        </div>
+        <div class="book__pages-block" id="book-pages-block">
+          <div class="book__page-edge" aria-hidden="true"></div>
+        </div>
+        <div class="book__front-cover" id="book-front-cover">
+          <div class="book__cover-art" id="book-cover-art"></div>
+          <div class="book__cover-title" id="book-cover-title"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="book-controls" id="book-controls">
+      <button class="page-nav page-nav--prev" id="page-prev" aria-label="Previous page">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="page-counter" id="page-counter">1 / 1</span>
+      <button class="page-nav page-nav--next" id="page-next" aria-label="Next page">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
+<div id="viewer" class="viewer" aria-label="Fullscreen photo viewer">
+  <div class="viewer__backdrop"></div>
+  <button class="viewer__close" id="viewer-close" aria-label="Close viewer">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  </button>
+  <button class="viewer__download" id="viewer-download" aria-label="Download photo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button class="viewer__arrow viewer__arrow--left" id="viewer-prev" aria-label="Previous photo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div class="viewer__stage" id="viewer-stage">
+    <img id="viewer-image" class="viewer__image" alt="" draggable="false" />
+  </div>
+  <button class="viewer__arrow viewer__arrow--right" id="viewer-next" aria-label="Next photo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div class="viewer__counter" id="viewer-counter">1 / 1</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
