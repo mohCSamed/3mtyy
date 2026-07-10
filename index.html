@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
 <title>Private Photo Collection</title>
 <meta name="description" content="A private, luxury digital photo album." />
+<meta name="referrer" content="no-referrer" />
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
 <!-- Optional: set for GitHub Pages project site, e.g. content="/my-repo/" -->
 <meta name="site-base" content="/3mtyy/" />
 
@@ -80,6 +82,7 @@
     <p class="password-subtitle">This collection belongs to <em id="owner-name">Our Family</em>.</p>
 
     <form id="password-form" class="password-form" autocomplete="off">
+      <input type="text" id="vault-honeypot" name="vault_hp" class="vault-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
       <div class="password-input-wrap">
         <input
           type="password"
@@ -256,6 +259,8 @@
   <div class="viewer__counter" id="viewer-counter">1 / 1</div>
 </div>
 
+<script src="analytics.js"></script>
+<script src="security.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

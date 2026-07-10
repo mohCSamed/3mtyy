@@ -1,0 +1,13 @@
+{
+  "ownerDisplay": "Our Family",
+  "maintenanceMode": false,
+  "hiddenAlbums": [],
+  "security": {
+    "maxAttempts": 5,
+    "lockoutMinutes": 15,
+    "sessionHours": 12,
+    "disableDownload": false,
+    "disableContextMenu": true,
+    "disableDrag": true
+  }
+}

@@ -1568,3 +1568,25 @@ button:focus-visible, input:focus-visible{
   .book-item__title{ font-size:12px; }
   .book-item__sub{ display:none; }
 }
+
+/* Honeypot — hidden bot trap */
+.vault-honeypot{
+  position:absolute; left:-9999px; width:0; height:0;
+  opacity:0; pointer-events:none;
+}
+
+/* Maintenance overlay */
+.maintenance-screen{
+  display:flex; align-items:center; justify-content:center;
+  background:var(--walnut-950);
+}
+.maintenance-card{
+  text-align:center; padding:40px 28px; max-width:420px;
+  border:1px solid var(--glass-border); border-radius:18px;
+  background:rgba(35,22,14,0.75);
+}
+.maintenance-card h1{
+  margin:0 0 12px; font-family:var(--font-display);
+  font-size:1.8rem; color:var(--gold);
+}
+.maintenance-card p{ margin:0; color:var(--parchment-dim); }

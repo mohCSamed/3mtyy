@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow, noarchive" />
+<meta name="referrer" content="no-referrer" />
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+<title>Vault Admin</title>
+<meta name="site-base" content="/3mtyy/" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin-body">
+
+<div class="admin-wrap">
+  <header class="admin-header">
+    <p class="admin-eyebrow">Private Vault</p>
+    <h1 class="admin-title">لوحة التحكم</h1>
+  </header>
+
+  <!-- LOGIN -->
+  <section id="admin-login" class="admin-card">
+    <h2>دخول المسؤول</h2>
+    <form id="admin-login-form" autocomplete="off">
+      <input type="text" name="vault_hp" class="admin-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <div class="admin-field">
+        <label for="admin-password">كلمة مرور الأدمن</label>
+        <input type="password" id="admin-password" class="admin-input" placeholder="••••••••••" autocomplete="off" required />
+      </div>
+      <button type="submit" class="admin-btn admin-btn--primary">دخول</button>
+      <p class="admin-error" id="admin-login-error"></p>
+    </form>
+    <p class="admin-note">هذه الصفحة مخفية ولا تظهر في الموقع. احفظ الرابط وكلمة المرور في مكان آمن.</p>
+  </section>
+
+  <!-- DASHBOARD -->
+  <div id="admin-dashboard" class="admin-hidden">
+    <div class="admin-topbar">
+      <span class="admin-badge">مسؤول متصل</span>
+      <div class="admin-actions" style="margin:0">
+        <a href="index.html" class="admin-btn admin-btn--ghost">عرض الموقع</a>
+        <button type="button" id="admin-logout" class="admin-btn admin-btn--danger">خروج</button>
+      </div>
+    </div>
+
+    <section class="admin-card">
+      <h2>إحصائيات</h2>
+      <div class="admin-stats" id="admin-stats">
+        <div class="admin-stat"><strong id="stat-albums">—</strong><span>ألبومات</span></div>
+        <div class="admin-stat"><strong id="stat-photos">—</strong><span>صور</span></div>
+        <div class="admin-stat"><strong id="stat-visible">—</strong><span>ظاهرة</span></div>
+        <div class="admin-stat"><strong id="stat-attempts">—</strong><span>محاولات فاشلة</span></div>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>سجل الزوار</h2>
+      <p class="admin-note" id="visitors-status">يتطلب تفعيل Supabase (مجاني) — شوف الإعداد أدناه.</p>
+      <div class="admin-stats" style="margin-bottom:14px">
+        <div class="admin-stat"><strong id="stat-visits-total">—</strong><span>إجمالي الدخول</span></div>
+        <div class="admin-stat"><strong id="stat-visits-unique">—</strong><span>زوار مختلفين</span></div>
+        <div class="admin-stat"><strong id="stat-visits-today">—</strong><span>اليوم</span></div>
+      </div>
+      <button type="button" id="btn-refresh-visits" class="admin-btn">تحديث السجل</button>
+      <div class="admin-visitors-table-wrap">
+        <table class="admin-visitors-table" id="visitors-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>الوقت</th>
+              <th>الجهاز</th>
+              <th>المتصفح</th>
+              <th>اللغة</th>
+              <th>معرّف الزائر</th>
+            </tr>
+          </thead>
+          <tbody id="visitors-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>رفع صور جديدة</h2>
+      <div class="admin-field">
+        <label for="upload-album">اختر الألبوم</label>
+        <select id="upload-album" class="admin-input"></select>
+      </div>
+      <div class="admin-upload-drop" id="upload-drop">
+        <p>اسحب الصور هنا أو اضغط للاختيار</p>
+        <p class="admin-upload-hint">JPG · PNG · WebP — تتحول تلقائياً لـ WebP</p>
+        <input type="file" id="upload-files" accept="image/*" multiple hidden />
+      </div>
+      <div id="upload-preview"></div>
+      <p class="admin-note" id="upload-status"></p>
+      <button type="button" id="btn-build-zip" class="admin-btn admin-btn--primary" disabled>تحميل ZIP للرفع</button>
+      <p class="admin-note">
+        <strong>بعد التحميل:</strong> فك الضغط داخل مجلد <code>3mtyy</code> → GitHub Desktop → Commit → Push.
+      </p>
+    </section>
+
+    <section class="admin-card">
+      <h2>ربط سجل الزوار (Supabase — مجاني)</h2>
+      <ol class="admin-steps">
+        <li>سجّل على <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> → New Project</li>
+        <li>SQL Editor → الصق محتوى ملف <code>tools/supabase-setup.sql</code> → Run</li>
+        <li>Settings → API → انسخ <strong>Project URL</strong> و <strong>anon public</strong> key</li>
+        <li>الصقهم هنا واحفظ</li>
+      </ol>
+      <div class="admin-field">
+        <label for="cfg-supa-url">Project URL</label>
+        <input type="url" id="cfg-supa-url" class="admin-input" placeholder="https://xxxx.supabase.co" dir="ltr" />
+      </div>
+      <div class="admin-field">
+        <label for="cfg-supa-key">Anon Key</label>
+        <input type="text" id="cfg-supa-key" class="admin-input" placeholder="eyJhbG..." dir="ltr" autocomplete="off" />
+      </div>
+      <div class="admin-field">
+        <label for="cfg-launched">تاريخ رفع الموقع (للفلترة)</label>
+        <input type="datetime-local" id="cfg-launched" class="admin-input" />
+      </div>
+      <div class="admin-toggle-row">
+        <span>تفعيل تسجيل الزوار</span>
+        <label class="admin-toggle"><input type="checkbox" id="cfg-analytics-enabled" /><span></span></label>
+      </div>
+      <div class="admin-actions">
+        <button type="button" id="btn-test-analytics" class="admin-btn">اختبار الاتصال</button>
+        <button type="button" id="btn-save-analytics" class="admin-btn admin-btn--primary">حفظ وتحميل analytics.json</button>
+      </div>
+      <p class="admin-note" id="analytics-test-result"></p>
+    </section>
+
+    <section class="admin-card">
+      <h2>إعدادات الموقع</h2>
+      <div class="admin-field">
+        <label for="cfg-owner">اسم العائلة (يظهر في الشاشة الأولى)</label>
+        <input type="text" id="cfg-owner" class="admin-input" />
+      </div>
+      <div class="admin-toggle-row">
+        <span>وضع الصيانة (إيقاف الموقع مؤقتاً)</span>
+        <label class="admin-toggle"><input type="checkbox" id="cfg-maintenance" /><span></span></label>
+      </div>
+      <h2 style="margin-top:18px;font-size:1.1rem">إخفاء ألبومات</h2>
+      <div class="admin-album-list" id="cfg-albums"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>الأمان</h2>
+      <div class="admin-grid-2">
+        <div class="admin-field">
+          <label for="cfg-max-attempts">أقصى محاولات قبل القفل</label>
+          <input type="number" id="cfg-max-attempts" class="admin-input" min="3" max="20" />
+        </div>
+        <div class="admin-field">
+          <label for="cfg-lockout">مدة القفل (دقائق)</label>
+          <input type="number" id="cfg-lockout" class="admin-input" min="5" max="120" />
+        </div>
+        <div class="admin-field">
+          <label for="cfg-session">مدة الجلسة (ساعات)</label>
+          <input type="number" id="cfg-session" class="admin-input" min="1" max="72" />
+        </div>
+      </div>
+      <div class="admin-toggle-row">
+        <span>منع تحميل الصور</span>
+        <label class="admin-toggle"><input type="checkbox" id="cfg-no-download" /><span></span></label>
+      </div>
+      <div class="admin-toggle-row">
+        <span>منع القائمة اليمنى على الصور</span>
+        <label class="admin-toggle"><input type="checkbox" id="cfg-no-context" /><span></span></label>
+      </div>
+      <div class="admin-toggle-row">
+        <span>منع سحب الصور</span>
+        <label class="admin-toggle"><input type="checkbox" id="cfg-no-drag" /><span></span></label>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>تغيير باسورد الموقع</h2>
+      <div class="admin-grid-2">
+        <div class="admin-field">
+          <label for="new-site-pw">باسورد جديد</label>
+          <input type="password" id="new-site-pw" class="admin-input" autocomplete="new-password" />
+        </div>
+        <div class="admin-field">
+          <label for="new-site-pw2">تأكيد الباسورد</label>
+          <input type="password" id="new-site-pw2" class="admin-input" autocomplete="new-password" />
+        </div>
+      </div>
+      <button type="button" id="btn-add-password" class="admin-btn">إضافة باسورد للقائمة</button>
+      <p class="admin-note" id="password-list-note">الباسوردات الحالية: عمتيي، داليا</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>سجل الأمان</h2>
+      <div class="admin-log" id="admin-audit-log"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>حفظ التغييرات</h2>
+      <p class="admin-note">لتطبيق الإعدادات على كل الزوار، حمّل الملفات وارفعها عبر GitHub Desktop.</p>
+      <div class="admin-actions">
+        <button type="button" id="btn-export-site" class="admin-btn admin-btn--primary">تحميل site.json</button>
+        <button type="button" id="btn-export-auth" class="admin-btn admin-btn--primary">تحميل auth.json</button>
+        <button type="button" id="btn-export-analytics" class="admin-btn admin-btn--primary">تحميل analytics.json</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="security.js"></script>
+<script src="analytics.js"></script>
+<script src="admin-upload.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

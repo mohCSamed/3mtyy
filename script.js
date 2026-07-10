@@ -6,10 +6,21 @@
   'use strict';
 
   /* ------------------------------------------------------------------
-     0. CONFIG — the only two things you are likely to want to change
+     0. CONFIG — loaded from config/site.json + config/auth.json
      ------------------------------------------------------------------ */
-  const OWNER_PASSWORDS   = ['عمتيي', 'داليا'];  // any of these unlocks the site, case-insensitive
-  const OWNER_DISPLAY     = 'Our Family';        // shown in the subtitle
+  let siteConfig = {
+    ownerDisplay: 'Our Family',
+    maintenanceMode: false,
+    hiddenAlbums: [],
+    security: {
+      maxAttempts: 5,
+      lockoutMinutes: 15,
+      sessionHours: 12,
+      disableDownload: false,
+      disableContextMenu: true,
+      disableDrag: true,
+    },
+  };
 
   const ALBUMS_BASE = 'Dalia-WebP';
 
@@ -427,10 +438,19 @@
     initDust();
     drawDust();
     initParallax();
-    detectNetworkProfile();
 
-    // Preload album manifests (JSON only — no images) while the loading screen runs
-    Promise.all(ALBUM_DIRS.map(loadAlbumManifest)).then((albums) => { ALBUMS = albums; });
+    const boot = Promise.all([
+      VaultSecurity.loadAuthConfig(),
+      VaultSecurity.loadSiteConfig(),
+      VaultAnalytics.loadConfig(),
+      detectNetworkProfile(),
+      Promise.all(ALBUM_DIRS.map(loadAlbumManifest)).then((albums) => { ALBUMS = albums; }),
+    ]).then((results) => {
+      const cfg = results[1];
+      if (cfg) siteConfig = { ...siteConfig, ...cfg, security: { ...siteConfig.security, ...(cfg.security || {}) } };
+      VaultSecurity.applyProtections(siteConfig);
+      applySecurityUI();
+    });
 
     const fill = $('#loading-fill');
     let progress = 0;
@@ -440,22 +460,55 @@
       fill.style.width = progress + '%';
       if (progress >= 100) {
         clearInterval(tick);
-        setTimeout(() => {
-          screens.loading.classList.add('is-fading-out');
-          setTimeout(() => {
-            screens.loading.classList.remove('is-active', 'is-fading-out');
-            enterPasswordScreen();
-          }, 950);
-        }, 350);
+        boot.then(finishLoading).catch(finishLoading);
       }
     }, 260);
+  }
+
+  function finishLoading() {
+    setTimeout(() => {
+      screens.loading.classList.add('is-fading-out');
+      setTimeout(() => {
+        screens.loading.classList.remove('is-active', 'is-fading-out');
+        if (siteConfig.maintenanceMode) {
+          showMaintenanceScreen();
+        } else if (VaultSecurity.hasSiteSession()) {
+          enterShelfScreen();
+        } else {
+          enterPasswordScreen();
+        }
+      }, 950);
+    }, 350);
+  }
+
+  function showMaintenanceScreen() {
+    let el = $('#maintenance-screen');
+    if (!el) {
+      el = document.createElement('section');
+      el.id = 'maintenance-screen';
+      el.className = 'screen is-active maintenance-screen';
+      el.setAttribute('aria-label', 'Maintenance');
+      el.innerHTML = `
+        <div class="maintenance-card">
+          <h1>الموقع قيد الصيانة</h1>
+          <p>نعود قريباً. شكراً لصبركم.</p>
+        </div>`;
+      document.body.appendChild(el);
+    }
+    Object.values(screens).forEach((s) => s?.classList.remove('is-active'));
+    el.classList.add('is-active');
+  }
+
+  function applySecurityUI() {
+    const dl = $('#viewer-download');
+    if (dl) dl.style.display = siteConfig.security?.disableDownload ? 'none' : '';
   }
 
   /* ------------------------------------------------------------------
      5. PASSWORD SCREEN
      ------------------------------------------------------------------ */
   function enterPasswordScreen() {
-    $('#owner-name').textContent = OWNER_DISPLAY.replace(/^Aunt\s+/i, '') || OWNER_DISPLAY;
+    $('#owner-name').textContent = (siteConfig.ownerDisplay || 'Our Family').replace(/^Aunt\s+/i, '');
     showScreen('password');
     const input = $('#password-input');
     setTimeout(() => input.focus({ preventScroll: true }), 400);
@@ -464,21 +517,44 @@
     const card = $('#password-card');
     const errorEl = $('#password-error');
     const submitBtn = $('.password-submit');
+    const honeypot = $('#vault-honeypot');
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (input.disabled) return; // sequence already running
-      const value = input.value.trim().toLowerCase();
-      if (value.length && OWNER_PASSWORDS.some((p) => p.toLowerCase() === value)) {
+      if (input.disabled) return;
+
+      if (honeypot?.value) {
+        await new Promise((r) => setTimeout(r, 1800));
+        errorEl.textContent = 'Incorrect password';
+        errorEl.classList.add('is-visible');
+        return;
+      }
+
+      const lock = VaultSecurity.isLockedOut();
+      if (lock.locked) {
+        errorEl.textContent = `Too many attempts. Try again in ${VaultSecurity.formatLockout(lock.remainingMs)}.`;
+        errorEl.classList.add('is-visible');
+        return;
+      }
+
+      const value = input.value.trim();
+      if (!value.length) return;
+
+      const result = await VaultSecurity.verifySitePassword(value);
+      if (result.ok) {
         errorEl.classList.remove('is-visible');
         input.disabled = true;
         submitBtn.disabled = true;
         playUnlockSequence({ card, submitBtn });
       } else {
         card.classList.remove('is-shaking');
-        // eslint-disable-next-line no-unused-expressions
-        void card.offsetWidth; // restart animation
+        void card.offsetWidth;
         card.classList.add('is-shaking');
+        if (result.reason === 'locked') {
+          errorEl.textContent = `Locked for ${VaultSecurity.formatLockout(result.remainingMs)}.`;
+        } else {
+          errorEl.textContent = 'Incorrect password';
+        }
         errorEl.classList.add('is-visible');
         playTone(160, 0.18, 'sawtooth', 0.04);
         input.value = '';
@@ -486,7 +562,10 @@
       }
     });
 
-    input.addEventListener('input', () => errorEl.classList.remove('is-visible'));
+    input.addEventListener('input', () => {
+      errorEl.classList.remove('is-visible');
+      errorEl.textContent = 'Incorrect password';
+    });
   }
 
   /* ------------------------------------------------------------------
@@ -743,11 +822,13 @@
   function renderShelf() {
     const row = $('#books-row');
     row.innerHTML = '';
+    const hidden = new Set(siteConfig.hiddenAlbums || []);
+    const visible = ALBUMS.filter((a) => !hidden.has(a.folder));
     const caption = $('#shelf-caption');
     if (caption) {
-      caption.textContent = `${numberWord(ALBUMS.length)} album${ALBUMS.length === 1 ? '' : 's'}. A lifetime kept close.`;
+      caption.textContent = `${numberWord(visible.length)} album${visible.length === 1 ? '' : 's'}. A lifetime kept close.`;
     }
-    ALBUMS.forEach((album, i) => {
+    visible.forEach((album, i) => {
       const el = document.createElement('div');
       el.className = 'book-item';
       el.style.animationDelay = `${0.4 + i * 0.16}s`;
@@ -1475,6 +1556,7 @@
   });
 
   $('#viewer-download').addEventListener('click', () => {
+    if (siteConfig.security?.disableDownload) return;
     const a = document.createElement('a');
     a.href = viewerImg.src;
     const album = currentAlbum;
