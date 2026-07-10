@@ -17,8 +17,13 @@
   const SITE_BASE = (() => {
     const meta = document.querySelector('meta[name="site-base"]');
     const raw = meta?.getAttribute('content')?.trim() || '';
-    if (!raw) return '';
-    return raw.replace(/\/?$/, '/');
+    if (raw) return raw.replace(/\/?$/, '/');
+    /* Auto-detect project site: https://user.github.io/repo-name/ */
+    if (location.hostname.endsWith('github.io')) {
+      const seg = location.pathname.split('/').filter(Boolean)[0];
+      if (seg && !/\.html?$/i.test(seg)) return `/${seg}/`;
+    }
+    return '';
   })();
 
   function assetPath(...segments) {
